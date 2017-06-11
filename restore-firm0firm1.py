@@ -23,7 +23,6 @@ if not os.path.isfile('NAND-patched.bin'):
 use_separate = True  # use separate firm(0/1)_enc.bak
 if os.path.isfile('firm0firm1.bak'):
     print('Using firm0firm1.bak.')
-    pass  # nothing to do here
 elif os.path.isfile('firm0_enc.bak') and os.path.isfile('firm1_enc.bak'):
     print('Using firm0_enc.bak and firm1_enc.bak')
     use_separate = True
