@@ -20,8 +20,17 @@ def doexit(msg, errcode=0):
 if not os.path.isfile('NAND-patched.bin'):
     doexit('NAND-patched.bin not found.', errcode=1)
 
-if not os.path.isfile('firm0firm1.bak'):
-    doexit('firm0firm1.bak was not found.', errcode=1)
+use_separate = True  # use separate firm(0/1)_enc.bak
+if os.path.isfile('firm0firm1.bak'):
+    print('Using firm0firm1.bak.')
+    pass  # nothing to do here
+elif os.path.isfile('firm0_enc.bak') and os.path.isfile('firm1_enc.bak'):
+    print('Using firm0_enc.bak and firm1_enc.bak')
+    use_separate = True
+else:
+    doexit('FIRM backup was not found.\n'
+           'This can be in a single "firm0firm1.bak" file, or\n'
+           'two "firm0_enc.bak" and "firm1_enc.bak" files.', errcode=1)
 
 if os.path.isfile('NAND-unpatched.bin'):
     doexit('NAND-unpatched.bin was found.\n'
@@ -33,10 +42,16 @@ readsize = 0x100000  # must be divisible by 0x3AF00000 and 0x4D800000
 
 print('Trying to open NAND-patched.bin...')
 with open('NAND-patched.bin', 'rb+') as nand:
-    print('Restoring firm0firm1.back.')
+    print('Restoring FIRM0FIRM1.')
     nand.seek(0xB130000)
-    with open('firm0firm1.bak', 'rb') as f:
-        firm_final = f.read(0x800000)
+    if use_separate:
+        with open('firm0_enc.bak', 'rb') as f:
+            firm_final = f.read(0x400000).ljust(0x400000, b'\0')
+        with open('firm1_enc.bak', 'rb') as f:
+            firm_final += f.read(0x400000).ljust(0x400000, b'\0')
+    else:
+        with open('firm0firm1.bak', 'rb') as f:
+            firm_final = f.read(0x800000)
     start_time = time.time()
     for curr in range(0x800000 // readsize):
         print('Writing {:06X} ({:>5.1f}%)'.format((curr + 1) * readsize,
